@@ -73,8 +73,7 @@
 
   <div class="controls">
     <button id="prev">⏮</button>
-    <button id="play">▶️</button>
-    <button id="pause">⏸</button>
+    <button id="togglePlay">▶️</button>
     <button id="next">⏭</button>
     <button id="shuffle">🔀</button>
   </div>
@@ -99,6 +98,7 @@
     const upNextEl = document.getElementById('upNext');
     const fileInput = document.getElementById('fileInput');
     const loadPlaylistFile = document.getElementById('loadPlaylistFile');
+    const togglePlayBtn = document.getElementById('togglePlay');
 
     let playlist = [];
     let currentIndex = 0;
@@ -177,8 +177,22 @@
       updatePlaylistUI();
     });
 
-    document.getElementById('play').addEventListener('click', () => audio.play());
-    document.getElementById('pause').addEventListener('click', () => audio.pause());
+    togglePlayBtn.addEventListener('click', () => {
+      if (audio.paused) {
+        audio.play();
+      } else {
+        audio.pause();
+      }
+    });
+
+    audio.addEventListener('play', () => {
+      togglePlayBtn.textContent = '⏸';
+    });
+
+    audio.addEventListener('pause', () => {
+      togglePlayBtn.textContent = '▶️';
+    });
+
     document.getElementById('next').addEventListener('click', nextTrack);
     document.getElementById('prev').addEventListener('click', prevTrack);
     document.getElementById('shuffle').addEventListener('click', () => {
