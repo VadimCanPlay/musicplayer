@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Music Player</title>
+  <style>
+    body {
+      background: #111;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    h1 {
+      margin: 20px 0;
+    }
+    .controls {
+      margin: 20px;
+    }
+    button {
+      background: #444;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      margin: 5px;
+      cursor: pointer;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    button:hover {
+      background: #666;
+    }
+    #playlist {
+      margin: 20px auto;
+      max-width: 500px;
+      text-align: left;
+    }
+    #playlist li {
+      margin: 5px 0;
+      padding: 5px;
+      background: #222;
+      border-radius: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    #playlist li span {
+      flex: 1;
+    }
+    #queue {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎵 My Music Player</h1>
+
+  <div class="controls">
+    <button id="prev">⏮ Prev</button>
+    <button id="play">▶️ Play</button>
+    <button id="pause">⏸ Pause</button>
+    <button id="next">⏭ Next</button>
+    <button id="shuffle">🔀 Shuffle</button>
+  </div>
+
+  <input type="file" id="fileInput" multiple accept="audio/*">
+  <button id="savePlaylist">💾 Save Playlist</button>
+  <button id="loadPlaylist">📂 Load Playlist</button>
+
+  <ul id="playlist"></ul>
+
+  <div id="queue">
+    <h3>What's Next:</h3>
+    <ul id="upNext"></ul>
+  </div>
+
+  <audio id="audio" controls hidden></audio>
+
+  <script>
+    const audio = document.getElementById('audio');
+    const playlistEl = document.getElementById('playlist');
+    const upNextEl = document.getElementById('upNext');
+    const fileInput = document.getElementById('fileInput');
+
+    let playlist = [];
+    let currentIndex = 0;
+    let shuffleMode = false;
+
+    function updatePlaylistUI() {
+      playlistEl.innerHTML = '';
+      playlist.forEach((track, i) => {
+        const li = document.createElement('li');
+        li.innerHTML = `<span>${track.name}</span> <button onclick="playTrack(${i})">▶️</button>`;
+        playlistEl.appendChild(li);
+      });
+      updateQueueUI();
+    }
+
+    function updateQueueUI() {
+      upNextEl.innerHTML = '';
+      let queue = playlist.slice(currentIndex + 1);
+      queue.forEach(t => {
+        const li = document.createElement('li');
+        li.textContent = t.name;
+        upNextEl.appendChild(li);
+      });
+    }
+
+    function playTrack(index) {
+      if (index < 0 || index >= playlist.length) return;
+      currentIndex = index;
+      audio.src = playlist[currentIndex].url;
+      audio.play();
+      updateQueueUI();
+    }
+
+    function nextTrack() {
+      if (shuffleMode) {
+        currentIndex = Math.floor(Math.random() * playlist.length);
+      } else {
+        currentIndex = (currentIndex + 1) % playlist.length;
+      }
+      playTrack(currentIndex);
+    }
+
+    function prevTrack() {
+      currentIndex = (currentIndex - 1 + playlist.length) % playlist.length;
+      playTrack(currentIndex);
+    }
+
+    fileInput.addEventListener('change', (e) => {
+      const files = Array.from(e.target.files);
+      files.forEach(file => {
+        playlist.push({
+          name: file.name,
+          url: URL.createObjectURL(file)
+        });
+      });
+      updatePlaylistUI();
+    });
+
+    document.getElementById('play').addEventListener('click', () => audio.play());
+    document.getElementById('pause').addEventListener('click', () => audio.pause());
+    document.getElementById('next').addEventListener('click', nextTrack);
+    document.getElementById('prev').addEventListener('click', prevTrack);
+    document.getElementById('shuffle').addEventListener('click', () => {
+      shuffleMode = !shuffleMode;
+      alert('Shuffle: ' + (shuffleMode ? 'ON' : 'OFF'));
+    });
+
+    audio.addEventListener('ended', nextTrack);
+
+    document.getElementById('savePlaylist').addEventListener('click', () => {
+      localStorage.setItem('myPlaylist', JSON.stringify(playlist.map(t => t.name)));
+      alert('Playlist saved! (file names only, reload and re-add to fully restore)');
+    });
+
+    document.getElementById('loadPlaylist').addEventListener('click', () => {
+      let saved = JSON.parse(localStorage.getItem('myPlaylist') || '[]');
+      alert('Saved playlist:\n' + saved.join('\n'));
+    });
+  </script>
+</body>
+</html>
