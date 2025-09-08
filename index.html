@@ -66,6 +66,7 @@
 
   <input type="file" id="fileInput" multiple accept="audio/*">
   <button id="savePlaylist">💾 Save Playlist</button>
+  <input type="file" id="loadPlaylistFile" accept=".json" hidden>
   <button id="loadPlaylist">📂 Load Playlist</button>
 
   <ul id="playlist"></ul>
@@ -82,6 +83,7 @@
     const playlistEl = document.getElementById('playlist');
     const upNextEl = document.getElementById('upNext');
     const fileInput = document.getElementById('fileInput');
+    const loadPlaylistFile = document.getElementById('loadPlaylistFile');
 
     let playlist = [];
     let currentIndex = 0;
@@ -151,14 +153,40 @@
 
     audio.addEventListener('ended', nextTrack);
 
+    // Save playlist as JSON file
     document.getElementById('savePlaylist').addEventListener('click', () => {
-      localStorage.setItem('myPlaylist', JSON.stringify(playlist.map(t => t.name)));
-      alert('Playlist saved! (file names only, reload and re-add to fully restore)');
+      const data = playlist.map(t => ({ name: t.name }));
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = "playlist.json";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     });
 
+    // Load playlist JSON file
     document.getElementById('loadPlaylist').addEventListener('click', () => {
-      let saved = JSON.parse(localStorage.getItem('myPlaylist') || '[]');
-      alert('Saved playlist:\n' + saved.join('\n'));
+      loadPlaylistFile.click();
+    });
+
+    loadPlaylistFile.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const data = JSON.parse(event.target.result);
+          playlist = data.map(t => ({ name: t.name, url: "" }));
+          alert("Playlist loaded! Please re-add the audio files in the same order to play.");
+          updatePlaylistUI();
+        } catch (err) {
+          alert("Invalid playlist file!");
+        }
+      };
+      reader.readAsText(file);
     });
   </script>
 </body>
